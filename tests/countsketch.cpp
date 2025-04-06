@@ -1,9 +1,9 @@
 #include "CountSketch.h"
 
 #include <iostream>
-
+#include <limits>
 int main() {
-    CountSketch cs(20, 5, 42);  // 5 rows, 20 columns
+    CountSketch cs(20, 5, false, 42);  // 5 rows, 20 columns
 
     // Insert/update keys
     cs.update(42, 10);

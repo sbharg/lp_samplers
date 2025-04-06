@@ -2,33 +2,37 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <iostream>
 #include <random>
 
-/**
- * Constructs a CountSketch data structure with width w and depth d.
- *
- * \param w The size of each row in the sketch. Assumes w < 2^61 -1.
- * \param d The number of hash/sign rows in the sketch.
- */
-CountSketch::CountSketch(size_t w, size_t d, uint64_t seed)
-    : w_(w), d_(d), table_(d, std::vector<int64_t>(w, 0)), index_params(d), sign_params(d) {
-    std::mt19937_64 rng(seed);
-    std::uniform_int_distribution<uint64_t> dist(1, PRIME - 1);
+#include "MurmurHash3.h"
 
-    for (size_t i = 0; i < d_; ++i) {
+CountSketch::CountSketch(size_t w, size_t d, bool murmur, uint64_t seed)
+    : w_(w), d_(d), seed_(seed), use_murmur_(murmur), table_(d, std::vector<int64_t>(w, 0)) {
+    if (!use_murmur_) {
+        index_params.reserve(d_);
+        sign_params.reserve(d_);
+
+        std::mt19937_64 rng(seed);
+        std::uniform_int_distribution<uint64_t> dist(1, 2147483647);
+
         // Generate random parameters for hash functions
-        index_params[i] = std::make_pair(dist(rng), dist(rng));
-        sign_params[i] = std::make_pair(dist(rng), dist(rng));
+        for (size_t i = 0; i < d_; ++i) {
+            index_params.emplace_back(dist(rng), dist(rng));
+            sign_params.emplace_back(dist(rng), dist(rng));
+        }
     }
 }
 
 std::ostream& operator<<(std::ostream& os, const CountSketch& cs) {
-    for (const auto& row : cs.table_) {
-        for (const auto& val : row) {
-            os << val << " ";
+    if (cs.table_[0].size() <= 25) {
+        for (const auto& row : cs.table_) {
+            for (const auto& val : row) {
+                os << val << " ";
+            }
+            os << std::endl;
         }
-        os << std::endl;
     }
     return os;
 }
@@ -43,7 +47,7 @@ std::ostream& operator<<(std::ostream& os, const CountSketch& cs) {
  */
 size_t CountSketch::hash_idx(const size_t i, const uint64_t key) const {
     auto [a, b] = index_params[i];
-    uint64_t res = (a * key + b) % PRIME;
+    uint64_t res = (a * key + b) % PRIME_;
     return res % w_;
 }
 
@@ -57,7 +61,33 @@ size_t CountSketch::hash_idx(const size_t i, const uint64_t key) const {
  */
 int CountSketch::hash_sign(const size_t i, const uint64_t key) const {
     auto [a, b] = sign_params[i];
-    uint64_t res = (a * key + b) % PRIME;
+    uint64_t res = (a * key + b) % PRIME_;
+    return (res & 1) ? -1 : 1;
+}
+
+/**
+ * A hash function using MurmurHash3 that is not 2-wise independent, but may be faster in practice.
+ * Returns the bucket that a key is hashed into for the i-th row.
+ *
+ * \param i The index of the row
+ * \param key The key to hash.
+ * \return The index of the column in the row that the key is hashed to.
+ */
+size_t CountSketch::hash_idx_murmur(const size_t i, const uint64_t key) const {
+    uint64_t res = murmur_hash3_64(key, seed_ + i);
+    return res % w_;
+}
+
+/**
+ * A hash function using MurmurHash3 that is not 2-wise independent, but may be faster in practice.
+ * Returns the sign of the key for the i-th row.
+ *
+ * \param i The index of the row
+ * \param key The key to hash.
+ * \return Either 1 or -1.
+ */
+int CountSketch::hash_sign_murmur(const size_t i, const uint64_t key) const {
+    uint64_t res = murmur_hash3_64(key, seed_ + 2 * i);
     return (res & 1) ? -1 : 1;
 }
 
@@ -69,9 +99,20 @@ int CountSketch::hash_sign(const size_t i, const uint64_t key) const {
  * \param delta The change in frequency of the key.
  */
 void CountSketch::update(const uint64_t key, const int64_t delta) {
+    std::function<size_t(size_t, uint64_t)> idx_hash;
+    std::function<int(size_t, uint64_t)> sign_hash;
+
+    if (!use_murmur_) {
+        idx_hash = [this](size_t i, uint64_t key) { return hash_idx(i, key); };
+        sign_hash = [this](size_t i, uint64_t key) { return hash_sign(i, key); };
+    } else {
+        idx_hash = [this](size_t i, uint64_t key) { return hash_idx_murmur(i, key); };
+        sign_hash = [this](size_t i, uint64_t key) { return hash_sign_murmur(i, key); };
+    }
+
     for (size_t i = 0; i < d_; ++i) {
-        size_t idx = hash_idx(i, key);
-        int sign = hash_sign(i, key);
+        size_t idx = idx_hash(i, key);
+        int sign = sign_hash(i, key);
         table_[i][idx] += sign * delta;
     }
 }
@@ -85,12 +126,23 @@ void CountSketch::update(const uint64_t key, const int64_t delta) {
  * \return The median estimate of the frequency of the key.
  */
 int64_t CountSketch::estimate(const uint64_t key) const {
+    std::function<size_t(size_t, uint64_t)> idx_hash;
+    std::function<int(size_t, uint64_t)> sign_hash;
+
+    if (!use_murmur_) {
+        idx_hash = [this](size_t i, uint64_t key) { return hash_idx(i, key); };
+        sign_hash = [this](size_t i, uint64_t key) { return hash_sign(i, key); };
+    } else {
+        idx_hash = [this](size_t i, uint64_t key) { return hash_idx_murmur(i, key); };
+        sign_hash = [this](size_t i, uint64_t key) { return hash_sign_murmur(i, key); };
+    }
+
     std::vector<int64_t> estimates;
     estimates.reserve(d_);
 
     for (size_t i = 0; i < d_; ++i) {
-        size_t idx = hash_idx(i, key);
-        int sign = hash_sign(i, key);
+        size_t idx = idx_hash(i, key);
+        int sign = sign_hash(i, key);
         estimates.push_back(sign * table_[i][idx]);
     }
 

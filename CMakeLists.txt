@@ -20,6 +20,7 @@ endif()
 # Add library target
 add_library(lpsampling STATIC
     src/CountSketch.cpp
+    src/MurmurHash3.cpp
 )
 
 target_include_directories(lpsampling
