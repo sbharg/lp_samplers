@@ -3,7 +3,7 @@
 #include <iostream>
 
 int main() {
-    CountSketch cs(5, 1000);  // 5 hash functions, 1000 buckets
+    CountSketch cs(20, 5, 42);  // 5 hash functions, 1000 buckets
 
     // Insert/update keys
     cs.update(42, 10);
@@ -16,6 +16,8 @@ int main() {
     std::cout << "Estimate for key 7: " << cs.estimate(7) << std::endl;
     std::cout << "Estimate for key 123: " << cs.estimate(123) << std::endl;
     std::cout << "Estimate for key 99 (never inserted): " << cs.estimate(99) << std::endl;
+
+    std::cout << cs << std::endl;
 
     return 0;
 }
