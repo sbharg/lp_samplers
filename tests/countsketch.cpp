@@ -3,7 +3,7 @@
 #include <iostream>
 
 int main() {
-    CountSketch cs(20, 5, 42);  // 5 hash functions, 1000 buckets
+    CountSketch cs(20, 5, 42);  // 5 rows, 20 columns
 
     // Insert/update keys
     cs.update(42, 10);

@@ -1,7 +1,6 @@
 #include "CountSketch.h"
 
 #include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <random>
