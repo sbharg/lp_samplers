@@ -38,56 +38,44 @@ std::ostream& operator<<(std::ostream& os, const CountSketch& cs) {
 }
 
 /**
- * A multiply-shift hash function that is 2-wise independent.
- * Returns the bucket that a key is hashed into for the i-th row.
+ * A hash function that returns the bucket that a key is hashed into for the i-th row.
+ * If use_murmur_ is true, uses MurmurHash3. Otherwise, uses a simple multiply-shift hash function.
+ * MurmurHash3 is not 2-wise independent, but may be faster in practice.
+ * Multiply-shift is 2-wise independent, but may be slower in practice.
  *
  * \param i The index of the row
  * \param key The key to hash.
  * \return The index of the column in the row that the key is hashed to.
  */
-size_t CountSketch::hash_idx(const size_t i, const uint64_t key) const {
-    auto [a, b] = index_params[i];
-    uint64_t res = (a * key + b) % PRIME_;
+size_t CountSketch::idx_hash(const size_t i, const uint64_t key) const {
+    uint64_t res = 0;
+    if (use_murmur_) {
+        res = murmur_hash3_64(key, seed_ + i);
+    } else {
+        auto [a, b] = index_params[i];
+        res = (a * key + b) % PRIME_;
+    }
     return res % w_;
 }
 
 /**
- * A multiply-shift hash function that is 2-wise independent.
- * Returns the sign of the key for the i-th row.
+ * A hash function that returns the sign of the key for the i-th row.
+ * If use_murmur_ is true, uses MurmurHash3. Otherwise, uses a simple multiply-shift hash function.
+ * MurmurHash3 is not 2-wise independent, but may be faster in practice.
+ * Multiply-shift is 2-wise independent, but may be slower in practice.
  *
  * \param i The index of the row
  * \param key The key to hash.
  * \return Either 1 or -1.
  */
-int CountSketch::hash_sign(const size_t i, const uint64_t key) const {
-    auto [a, b] = sign_params[i];
-    uint64_t res = (a * key + b) % PRIME_;
-    return (res & 1) ? -1 : 1;
-}
-
-/**
- * A hash function using MurmurHash3 that is not 2-wise independent, but may be faster in practice.
- * Returns the bucket that a key is hashed into for the i-th row.
- *
- * \param i The index of the row
- * \param key The key to hash.
- * \return The index of the column in the row that the key is hashed to.
- */
-size_t CountSketch::hash_idx_murmur(const size_t i, const uint64_t key) const {
-    uint64_t res = murmur_hash3_64(key, seed_ + i);
-    return res % w_;
-}
-
-/**
- * A hash function using MurmurHash3 that is not 2-wise independent, but may be faster in practice.
- * Returns the sign of the key for the i-th row.
- *
- * \param i The index of the row
- * \param key The key to hash.
- * \return Either 1 or -1.
- */
-int CountSketch::hash_sign_murmur(const size_t i, const uint64_t key) const {
-    uint64_t res = murmur_hash3_64(key, seed_ + 2 * i);
+int CountSketch::sign_hash(const size_t i, const uint64_t key) const {
+    uint64_t res = 0;
+    if (use_murmur_) {
+        res = murmur_hash3_64(key, seed_ + 2 * i);
+    } else {
+        auto [a, b] = sign_params[i];
+        res = (a * key + b) % PRIME_;
+    }
     return (res & 1) ? -1 : 1;
 }
 
@@ -99,17 +87,6 @@ int CountSketch::hash_sign_murmur(const size_t i, const uint64_t key) const {
  * \param delta The change in frequency of the key.
  */
 void CountSketch::update(const uint64_t key, const int64_t delta) {
-    std::function<size_t(size_t, uint64_t)> idx_hash;
-    std::function<int(size_t, uint64_t)> sign_hash;
-
-    if (!use_murmur_) {
-        idx_hash = [this](size_t i, uint64_t key) { return hash_idx(i, key); };
-        sign_hash = [this](size_t i, uint64_t key) { return hash_sign(i, key); };
-    } else {
-        idx_hash = [this](size_t i, uint64_t key) { return hash_idx_murmur(i, key); };
-        sign_hash = [this](size_t i, uint64_t key) { return hash_sign_murmur(i, key); };
-    }
-
     for (size_t i = 0; i < d_; ++i) {
         size_t idx = idx_hash(i, key);
         int sign = sign_hash(i, key);
@@ -126,17 +103,6 @@ void CountSketch::update(const uint64_t key, const int64_t delta) {
  * \return The median estimate of the frequency of the key.
  */
 int64_t CountSketch::estimate(const uint64_t key) const {
-    std::function<size_t(size_t, uint64_t)> idx_hash;
-    std::function<int(size_t, uint64_t)> sign_hash;
-
-    if (!use_murmur_) {
-        idx_hash = [this](size_t i, uint64_t key) { return hash_idx(i, key); };
-        sign_hash = [this](size_t i, uint64_t key) { return hash_sign(i, key); };
-    } else {
-        idx_hash = [this](size_t i, uint64_t key) { return hash_idx_murmur(i, key); };
-        sign_hash = [this](size_t i, uint64_t key) { return hash_sign_murmur(i, key); };
-    }
-
     std::vector<int64_t> estimates;
     estimates.reserve(d_);
 

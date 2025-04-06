@@ -30,19 +30,14 @@ class CountSketch {
     const size_t d_;  // number of hash/sign rows
     const bool use_murmur_;
 
-    std::vector<std::vector<int64_t>> table_;  // Sketch matrix of size d x w
+    std::vector<std::vector<int64_t>> table_;  // Sketch matrix of size d_ x w_
 
     const uint64_t PRIME_ = 2305843009213693951ULL;           // 2^61 - 1, large prime
-    std::vector<std::pair<uint64_t, uint64_t>> index_params;  // Parameters for index hash functions
-    std::vector<std::pair<uint64_t, uint64_t>> sign_params;   // Parameters for sign hash functions
+    std::vector<std::pair<uint64_t, uint64_t>> index_params;  // Parameters for MS index hash functions
+    std::vector<std::pair<uint64_t, uint64_t>> sign_params;   // Parameters for MS sign hash functions
 
-    // 2-wise independent hash functions using the multiply-shift method
-    size_t hash_idx(const size_t i, const uint64_t key) const;
-    int hash_sign(const size_t i, const uint64_t key) const;
-
-    // Hash functions using MurmurHash3. Not 2-wise independent, but may be faster in practice
-    size_t hash_idx_murmur(const size_t i, const uint64_t key) const;
-    int hash_sign_murmur(const size_t i, const uint64_t key) const;
+    size_t idx_hash(const size_t i, const uint64_t key) const;
+    int sign_hash(const size_t i, const uint64_t key) const;
 };
 
 #endif  // COUNT_SKETCH_H
