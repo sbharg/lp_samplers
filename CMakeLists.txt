@@ -21,6 +21,7 @@ endif()
 add_library(lpsampling STATIC
     src/CountSketch.cpp
     src/MurmurHash3.cpp
+    src/FpEstimator.cpp
 )
 
 target_include_directories(lpsampling
@@ -32,3 +33,8 @@ add_executable(countsketch_test
     tests/countsketch.cpp
 )
 target_link_libraries(countsketch_test PRIVATE lpsampling)
+
+add_executable(f2estimate_test
+    tests/f2estimate.cpp
+)
+target_link_libraries(f2estimate_test PRIVATE lpsampling)
