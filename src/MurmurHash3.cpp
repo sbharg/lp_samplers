@@ -44,6 +44,8 @@ inline uint64_t rotl64(uint64_t x, int8_t r) {
 
 #define BIG_CONSTANT(x) (x##LLU)
 
+#include <cstdint>
+
 #endif  // !defined(_MSC_VER)
 
 //-----------------------------------------------------------------------------
@@ -412,6 +414,14 @@ void MurmurHash3_x64_128(const void *key, const int len,
     ((uint64_t *)out)[1] = h2;
 }
 
+/*
+ * A helper function to get a 64-bit hash output of MurmurHash3_x64_128
+ * for a given key and seed.
+ *
+ * \param key (uint64_t) The key to hash.
+ * \param seed (uint64_t) The seed for the hash function.
+ * \return The 64-bit hash output returned as a uint64_t.
+ */
 uint64_t murmur_hash3_64(uint64_t key, uint64_t seed) {
     uint64_t hash_out[2] = {0};
     MurmurHash3_x64_128(&key, sizeof(key), seed, hash_out);
