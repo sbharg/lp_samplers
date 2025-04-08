@@ -2,13 +2,12 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <functional>
 #include <iostream>
 #include <random>
 
 #include "MurmurHash3.h"
 
-CountSketch::CountSketch(size_t w, size_t d, bool murmur, uint64_t seed)
+CountSketch::CountSketch(size_t w, size_t d, uint64_t seed, bool murmur)
     : w_(w), d_(d), seed_(seed), use_murmur_(murmur), table_(d, std::vector<int64_t>(w, 0)) {
     if (!use_murmur_) {
         index_params.reserve(d_);
@@ -53,7 +52,7 @@ size_t CountSketch::idx_hash(const size_t i, const uint64_t key) const {
         res = murmur_hash3_64(key, seed_ + i);
     } else {
         auto [a, b] = index_params[i];
-        res = (a * key + b) % PRIME_;
+        res = mod_prime(a * key + b);
     }
     return res % w_;
 }
@@ -74,7 +73,7 @@ int CountSketch::sign_hash(const size_t i, const uint64_t key) const {
         res = murmur_hash3_64(key, seed_ + 2 * i);
     } else {
         auto [a, b] = sign_params[i];
-        res = (a * key + b) % PRIME_;
+        res = mod_prime(a * key + b);
     }
     return (res & 1) ? -1 : 1;
 }
@@ -103,13 +102,12 @@ void CountSketch::update(const uint64_t key, const int64_t delta) {
  * \return The median estimate of the frequency of the key.
  */
 int64_t CountSketch::estimate(const uint64_t key) const {
-    std::vector<int64_t> estimates;
-    estimates.reserve(d_);
+    std::vector<int64_t> estimates(d_);
 
     for (size_t i = 0; i < d_; ++i) {
         size_t idx = idx_hash(i, key);
         int sign = sign_hash(i, key);
-        estimates.push_back(sign * table_[i][idx]);
+        estimates[i] = sign * table_[i][idx];
     }
 
     // Return median estimate
