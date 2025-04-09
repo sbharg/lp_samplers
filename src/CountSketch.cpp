@@ -47,6 +47,10 @@ std::ostream& operator<<(std::ostream& os, const CountSketch& cs) {
  * \return The index of the column in the row that the key is hashed to.
  */
 size_t CountSketch::idx_hash(const size_t i, const uint64_t key) const {
+    if (i >= d_) {
+        throw std::out_of_range("i is out of range");
+    }
+
     uint64_t res = 0;
     if (use_murmur_) {
         res = murmur_hash3_64(key, seed_ + i);
@@ -68,6 +72,10 @@ size_t CountSketch::idx_hash(const size_t i, const uint64_t key) const {
  * \return Either 1 or -1.
  */
 int CountSketch::sign_hash(const size_t i, const uint64_t key) const {
+    if (i >= d_) {
+        throw std::out_of_range("i is out of range");
+    }
+
     uint64_t res = 0;
     if (use_murmur_) {
         res = murmur_hash3_64(key, seed_ + 2 * i);

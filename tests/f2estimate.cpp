@@ -1,6 +1,8 @@
+#include <cmath>
 #include <iostream>
 
 #include "FpEstimator.h"
+
 int main() {
     F2Estimator sketch(0.1, 0.01, false, 42);
 
@@ -14,7 +16,7 @@ int main() {
 
     // Estimate l2 norm
     std::cout << "Estimate for l2 norm: " << sketch.estimate_norm() << std::endl;
-    std::cout << "Actual l2 norm: " << 15 * 15 + 3 * 3 + (-2) * (-2) << std::endl;
+    std::cout << "Actual l2 norm: " << sqrt(15 * 15 + 3 * 3 + (-2) * (-2)) << std::endl;
 
     return 0;
 }

@@ -1,6 +1,7 @@
 #include "FpEstimator.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <random>
@@ -99,5 +100,5 @@ double F2Estimator::estimate_norm() const {
         estimate += val * val;
     }
 
-    return estimate;
+    return sqrt(estimate);
 }
