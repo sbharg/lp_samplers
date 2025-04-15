@@ -6,7 +6,7 @@
 #include <vector>
 
 class CountSketch {
-   public:
+    public:
     /**
      * Constructs a CountSketch data structure with width w and depth d.
      *
@@ -24,7 +24,7 @@ class CountSketch {
 
     friend std::ostream& operator<<(std::ostream& os, const CountSketch& cs);
 
-   private:
+    private:
     const uint64_t seed_;
     const size_t w_;  // size of row
     const size_t d_;  // number of hash/sign rows
@@ -33,8 +33,10 @@ class CountSketch {
     std::vector<std::vector<int64_t>> table_;  // Sketch matrix of size d_ x w_
 
     const uint64_t PRIME_ = (1ULL << 61) - 1;                 // 2^61 - 1, large Mersenne prime
-    std::vector<std::pair<uint64_t, uint64_t>> index_params;  // Parameters for MS index hash functions
-    std::vector<std::pair<uint64_t, uint64_t>> sign_params;   // Parameters for MS sign hash functions
+    std::vector<std::pair<uint64_t, uint64_t>> index_params;  // Parameters for MS index hash
+                                                              // functions
+    std::vector<std::pair<uint64_t, uint64_t>> sign_params;   // Parameters for MS sign hash
+                                                              // functions
     uint64_t mod_prime(uint64_t x) const {
         uint64_t res = (x >> 61) + (x & PRIME_);
         return (res >= PRIME_) ? res - PRIME_ : res;

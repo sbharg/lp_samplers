@@ -6,9 +6,10 @@
 #include <vector>
 
 class F2Estimator {
-   public:
+    public:
     /**
-     * Constructs a CountSketch data structure with a single row of width 6 * (eps^2 * delta)^{-1}.
+     * Constructs a CountSketch data structure with a single row of width 6 * (eps^2 *
+     * delta)^{-1}.
      *
      * \param eps The desired error rate. Defaults to 0.1.
      * \param delta The desired failure probability. Defaults to 0.01.
@@ -24,7 +25,7 @@ class F2Estimator {
 
     friend std::ostream& operator<<(std::ostream& os, const F2Estimator& sketch);
 
-   private:
+    private:
     const size_t w_;  // size of row
     const double eps_;
     const double delta_;
