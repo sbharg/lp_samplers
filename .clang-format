@@ -1,0 +1,18 @@
+---
+BasedOnStyle: Google
+AccessModifierOffset: '0'
+AlignTrailingComments: 'true'
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: 'false'
+BinPackArguments: 'false'
+BinPackParameters: 'false'
+ColumnLimit: '100'
+IndentWidth: '4'
+Language: Cpp
+PenaltyBreakAssignment: '0'
+PenaltyBreakComment: '200'
+PenaltyBreakFirstLessLess: '200'
+PenaltyReturnTypeOnItsOwnLine: '200'
+ReflowComments: 'true'
+
+...
