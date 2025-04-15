@@ -9,7 +9,12 @@
 #include "MurmurHash3.h"
 
 F2Estimator::F2Estimator(double eps, double delta, uint64_t seed, bool murmur)
-    : w_(6 / (eps * eps * delta)), eps_(eps), delta_(delta), seed_(seed), use_murmur_(murmur), table_(w_) {
+    : w_(6 / (eps * eps * delta)),
+      eps_(eps),
+      delta_(delta),
+      seed_(seed),
+      use_murmur_(murmur),
+      table_(w_) {
     if (!use_murmur_) {
         std::mt19937_64 rng(seed);
         std::uniform_int_distribution<uint64_t> dist(1, 2147483647);
@@ -32,8 +37,8 @@ std::ostream& operator<<(std::ostream& os, const F2Estimator& sketch) {
 
 /**
  * A hash function that returns the bucket that a key is hashed into.
- * If use_murmur_ is true, uses MurmurHash3. Otherwise, uses a simple multiply-shift hash function.
- * MurmurHash3 is not 2-wise independent, but may be faster in practice.
+ * If use_murmur_ is true, uses MurmurHash3. Otherwise, uses a simple multiply-shift hash
+ * function. MurmurHash3 is not 2-wise independent, but may be faster in practice.
  * Multiply-shift is 2-wise independent, but may be slower in practice.
  *
  * \param key The key to hash.
@@ -52,8 +57,8 @@ size_t F2Estimator::idx_hash(const uint64_t key) const {
 
 /**
  * A hash function that returns the sign of the key.
- * If use_murmur_ is true, uses MurmurHash3. Otherwise, uses a simple multiply-shift hash function.
- * MurmurHash3 is not 2-wise independent, but may be faster in practice.
+ * If use_murmur_ is true, uses MurmurHash3. Otherwise, uses a simple multiply-shift hash
+ * function. MurmurHash3 is not 2-wise independent, but may be faster in practice.
  * Multiply-shift is 2-wise independent, but may be slower in practice.
  *
  * \param key The key to hash.

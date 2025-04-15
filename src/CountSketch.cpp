@@ -37,10 +37,11 @@ std::ostream& operator<<(std::ostream& os, const CountSketch& cs) {
 }
 
 /**
- * A hash function that returns the bucket that a key is hashed into for the i-th row.
- * If use_murmur_ is true, uses MurmurHash3. Otherwise, uses a simple multiply-shift hash function.
- * MurmurHash3 is not 2-wise independent, but may be faster in practice.
- * Multiply-shift is 2-wise independent, but may be slower in practice.
+ * A hash function that returns the bucket that a key is hashed into for the
+ * i-th row. If use_murmur_ is true, uses MurmurHash3. Otherwise, uses a simple
+ * multiply-shift hash function. MurmurHash3 is not 2-wise independent, but may
+ * be faster in practice. Multiply-shift is 2-wise independent, but may be
+ * slower in practice.
  *
  * \param i The index of the row
  * \param key The key to hash.
@@ -63,9 +64,10 @@ size_t CountSketch::idx_hash(const size_t i, const uint64_t key) const {
 
 /**
  * A hash function that returns the sign of the key for the i-th row.
- * If use_murmur_ is true, uses MurmurHash3. Otherwise, uses a simple multiply-shift hash function.
- * MurmurHash3 is not 2-wise independent, but may be faster in practice.
- * Multiply-shift is 2-wise independent, but may be slower in practice.
+ * If use_murmur_ is true, uses MurmurHash3. Otherwise, uses a simple
+ * multiply-shift hash function. MurmurHash3 is not 2-wise independent, but may
+ * be faster in practice. Multiply-shift is 2-wise independent, but may be
+ * slower in practice.
  *
  * \param i The index of the row
  * \param key The key to hash.
@@ -103,8 +105,9 @@ void CountSketch::update(const uint64_t key, const int64_t delta) {
 
 /**
  * Computes an estimate of the frequency of a given key.
- * For each i \in [d], the estimate of freq(key) is sign_i(key) * table[i][h_i(key)].
- * To boost accuracy, the median of these estimates is returned.
+ * For each i \in [d], the estimate of freq(key) is sign_i(key) *
+ * table[i][h_i(key)]. To boost accuracy, the median of these estimates is
+ * returned.
  *
  * \param key The key whose frequency is being estimated.
  * \return The median estimate of the frequency of the key.
@@ -119,6 +122,7 @@ int64_t CountSketch::estimate(const uint64_t key) const {
     }
 
     // Return median estimate
-    std::nth_element(estimates.begin(), estimates.begin() + estimates.size() / 2, estimates.end());
+    std::nth_element(
+        estimates.begin(), estimates.begin() + estimates.size() / 2, estimates.end());
     return estimates[estimates.size() / 2];
 }
