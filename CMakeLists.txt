@@ -18,31 +18,32 @@ endif()
 
 # Add library target
 add_library(lpsampling STATIC
-    src/CountSketch.cpp
-    src/MurmurHash3.cpp
-    src/FpEstimator.cpp
+  src/CountSketch.cpp
+  src/MurmurHash3.cpp
+  src/FpEstimator.cpp
 )
 target_include_directories(lpsampling
-    PUBLIC ${PROJECT_SOURCE_DIR}/include/lp_sampling
+  PUBLIC ${PROJECT_SOURCE_DIR}/include/lp_sampling
 )
 
-add_library(cxxopts INTERFACE)
-# add_library(cxxopts::cxxopts ALIAS cxxopts)
-add_subdirectory(include/cxxopts)
-
-# Example test/executable
 add_executable(countsketch_test
-    tests/countsketch.cpp
+  execs/countsketch.cpp
 )
 target_link_libraries(countsketch_test PRIVATE lpsampling)
-target_link_libraries(countsketch_test PRIVATE cxxopts)
 
 add_executable(f2estimate_test
-    tests/f2estimate.cpp
+  execs/f2estimate.cpp
 )
 target_link_libraries(f2estimate_test PRIVATE lpsampling)
 
+add_library(cxxopts INTERFACE)
+add_subdirectory(include/cxxopts)
+
+add_library(zipfian INTERFACE)
+add_subdirectory(include/zipfian)
+
 add_executable(stream_generator
-    tests/stream_generator.cpp
+  execs/stream_generator.cpp
 )
 target_link_libraries(stream_generator PRIVATE cxxopts)
+target_link_libraries(stream_generator PRIVATE zipfian)
