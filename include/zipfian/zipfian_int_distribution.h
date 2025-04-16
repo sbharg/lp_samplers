@@ -1,8 +1,10 @@
 /*
-This implementation is a direct port of Apache Common's RejectionInversionZipfSampler, written in Java.
-It is based on the method described by Wolfgang Hörmann and Gerhard Derflinger in
-[*Rejection-inversion to generate variates from Monotone discrete distributions*](https://dl.acm.org/citation.cfm?id=235029)
-from *ACM Transactions on Modeling and Computer Simulation (TOMACS) 6.3 (1996)*.
+This implementation is a direct port of [Apache Common's RejectionInversionZipfSampler][1].
+Based on the method described in [Rejection-inversion to generate variates from Monotone discrete distributions][2]
+by Wolfgang Hörmann and Gerhard Derflinger.
+
+[1]: https://github.com/apache/commons-rng/blob/6a1b0c16090912e8fc5de2c1fb5bd8490ac14699/commons-rng-sampling/src/main/java/org/apache/commons/rng/sampling/distribution/RejectionInversionZipfSampler.java
+[2]: https://dl.acm.org/citation.cfm?id=235029
 */
 
 #include <cassert>
@@ -26,8 +28,8 @@ class zipfian_int_distribution {
      * @throws std::invalid_argument if n_ <= 0 or exponent <= 0.
      */
     zipfian_int_distribution(size_t n, double s)
-        : n_(n), s_(s), uniformDist(0.0, 1.0) {
-        if (n_ <= 0 || n_ > std::numeric_limits<IntType>::max()) {
+        : n_(n), s_(s), uniform_(0.0, 1.0) {
+        if (n_ <= 0) {
             throw std::invalid_argument("Number of elements is out of range.");
         }
         if (s_ <= 0.0) {
@@ -35,9 +37,9 @@ class zipfian_int_distribution {
         }
 
         // Precompute constants.
-        h_integralX1 = h_integral(1.5) - 1.0;
-        h_integral_n = h_integral(static_cast<double>(n_) + 0.5);
-        s = 2.0 - h_integral_inverse(h_integral(2.5) - h(2.0));
+        h_integral_x_ = h_integral(1.5) - 1.0;
+        h_integral_n_ = h_integral(static_cast<double>(n_) + 0.5);
+        inv_const_ = 2.0 - h_integral_inverse(h_integral(2.5) - h(2.0));
     }
 
     /**
@@ -45,15 +47,15 @@ class zipfian_int_distribution {
      */
     template <typename UniformRandomNumberGenerator>
     size_t operator()(UniformRandomNumberGenerator& urng) {
-        return this->operator()(urng, n_, s_);
+        return this->operator()(urng, n_);
     }
 
     template <typename UniformRandomNumberGenerator>
-    size_t operator()(UniformRandomNumberGenerator& urng, size_t n, double exponent) {
+    size_t operator()(UniformRandomNumberGenerator& urng, size_t n) {
         while (true) {
-            // Draw a uniform double in [0, 1) and map it to the interval (h_integralX1, h_integral_n].
-            double u_ = std::generate_canonical<double, std::numeric_limits<double>::digits, UniformRandomNumberGenerator>(urng);
-            double u = h_integral_n + u_ * (h_integralX1 - h_integral_n);
+            // Draw a uniform double in [0, 1) and map it to the interval (h_integral_n_, h_integral_x_].
+            double u_ = uniform_(urng);
+            double u = h_integral_n_ + u_ * (h_integral_x_ - h_integral_n_);
             double x = h_integral_inverse(u);
             int k = static_cast<int>(x + 0.5);
 
@@ -65,19 +67,19 @@ class zipfian_int_distribution {
             }
 
             // Accept the candidate k if it meets the rejection criteria.
-            if ((k - x <= s) || (u >= h_integral(k + 0.5) - h(k))) {
+            if ((k - x <= inv_const_) || (u >= h_integral(k + 0.5) - h(k))) {
                 return k;
             }
         }
     }
 
   private:
-    int n_;               // The total number of elements.
-    double s_;            // The Zipf exponent.
-    double h_integralX1;  // h_integral(1.5) - 1
-    double h_integral_n;  // h_integral(n_ + 0.5)
-    double s;             // 2 - _i(h_integral(2.5) - h(2))
-    std::uniform_real_distribution<double> uniformDist;
+    int n_;                // The total number of elements.
+    double s_;             // The Zipf exponent.
+    double h_integral_x_;  // h_integral(1.5) - 1
+    double h_integral_n_;  // h_integral(n_ + 0.5)
+    double inv_const_;     // 2 - h_integral_inverse(h_integral(2.5) - h(2))
+    std::uniform_real_distribution<double> uniform_;
 
     /**
      * Computes H(x) = helper2((1 - exponent) * log(x)) * log(x).
@@ -85,8 +87,8 @@ class zipfian_int_distribution {
      * while for exponent == 1 it yields log(x).
      */
     double h_integral(double x) const {
-        double logX = std::log(x);
-        return helper2((1.0 - s_) * logX) * logX;
+        double log_x = std::log(x);
+        return helper2((1.0 - s_) * log_x) * log_x;
     }
 
     /**
@@ -94,7 +96,7 @@ class zipfian_int_distribution {
      */
     double h(double x) const {
         // Equivalent to exp(-exponent * log(x)).
-        return std::pow(x, -s_);
+        return std::exp(-s_ * std::log(x));
     }
 
     /**
@@ -113,11 +115,11 @@ class zipfian_int_distribution {
     }
 
     /**
-     * Helper function: calculates log(1 + x) / x.
+     * Helper function: calculates ln(1 + x) / x.
      * Uses a Taylor series expansion when x is close to 0.
      *
      * @param x Value for computation.
-     * @return The result of log1p(x)/x.
+     * @return The result of ln(1 + x)/x.
      */
     double helper1(double x) const {
         if (std::fabs(x) > 1e-8) {
