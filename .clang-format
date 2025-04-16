@@ -1,12 +1,12 @@
 ---
 BasedOnStyle: Google
-AccessModifierOffset: '0'
+AccessModifierOffset: '-2'
 AlignTrailingComments: 'true'
 AllowShortIfStatementsOnASingleLine: WithoutElse
 AllowShortLoopsOnASingleLine: 'false'
 BinPackArguments: 'false'
 BinPackParameters: 'false'
-ColumnLimit: '100'
+ColumnLimit: 10000
 IndentWidth: '4'
 Language: Cpp
 PenaltyBreakAssignment: '0'
@@ -14,5 +14,5 @@ PenaltyBreakComment: '200'
 PenaltyBreakFirstLessLess: '200'
 PenaltyReturnTypeOnItsOwnLine: '200'
 ReflowComments: 'true'
-
+PackConstructorInitializers: 'NextLineOnly'
 ...
