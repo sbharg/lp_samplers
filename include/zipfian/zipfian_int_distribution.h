@@ -71,32 +71,6 @@ class zipfian_int_distribution {
         }
     }
 
-    /**
-     * Generates a sample from a bounded Zipfian distribution using rejection inversion.
-     *
-     * @return An integer in the interval [1, n_] sampled according to the Zipf law.
-     */
-    int operator()(std::mt19937& rng) {
-        while (true) {
-            // Draw a uniform double in [0, 1) and map it to the interval (h_integralX1, h_integral_n].
-            double u = h_integral_n + uniformDist(rng) * (h_integralX1 - h_integral_n);
-            double x = h_integral_inverse(u);
-            int k = static_cast<int>(x + 0.5);
-
-            // Clamp k to the valid range.
-            if (k < 1) {
-                k = 1;
-            } else if (k > n_) {
-                k = n_;
-            }
-
-            // Accept the candidate k if it meets the rejection criteria.
-            if ((k - x <= s) || (u >= h_integral(k + 0.5) - h(k))) {
-                return k;
-            }
-        }
-    }
-
   private:
     int n_;               // The total number of elements.
     double s_;            // The Zipf exponent.
