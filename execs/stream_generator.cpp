@@ -18,9 +18,10 @@ int main(int argc, char* argv[]) {
     std::string output_filename;  // Output filename (required)
     std::string mode;             // Generation mode ("stream" or "zipfian")
     double zipf_s;                // Zipfian exponent (only for zipfian mode)
+    bool final_vector;            // Flag to indicate if only final freq vector should be saved in stream mode
 
-    const int STREAM_MIN_VALUE = -100;  // Min update value for stream mode
-    const int STREAM_MAX_VALUE = 100;   // Max update value for stream mode
+    int STREAM_MIN_VALUE;  // Min update value for stream mode
+    int STREAM_MAX_VALUE;   // Max update value for stream mode
 
     // --- Setup Command Line Options ---
     // clang-format off
@@ -29,7 +30,7 @@ int main(int argc, char* argv[]) {
         "Generates updates for a frequency vector.\n"
         "Modes:\n"
         "  stream: Generates (index, value) pairs for the turnstile model.\n"
-        "          Values are in [" + std::to_string(STREAM_MIN_VALUE) + ", " + std::to_string(STREAM_MAX_VALUE) + "].\n"
+        "          Values are in [-10, 10].\n"
         "  zipfian: Generates n items according to Zipf's law (exponent s),\n"
         "           outputs the final frequency vector.");
     // clang-format on
@@ -45,6 +46,12 @@ int main(int argc, char* argv[]) {
             cxxopts::value<std::string>(output_filename))
             ("m,mode", "Generation mode: 'stream' (default) or 'zipfian'",
             cxxopts::value<std::string>(mode)->default_value("stream"))
+            ("max", "Maximum value for stream updates (default: 10)",
+            cxxopts::value<int>()->default_value("10"))
+            ("min", "Minimum value for stream updates (default: -10)",
+            cxxopts::value<int>()->default_value("-10"))
+            ("f,final", "Only save the final frequency vector in stream mode (default: false)",
+            cxxopts::value<bool>(final_vector)->default_value("false"))
             ("s,zipf-s", "Zipfian distribution exponent (s > 0, used only for 'zipfian' mode)",
              cxxopts::value<double>(zipf_s)->default_value("1"))
             ("h,help","Print usage information");
@@ -70,6 +77,9 @@ int main(int argc, char* argv[]) {
         output_filename = result["output"].as<std::string>();
 
         mode = result["mode"].as<std::string>();
+        STREAM_MAX_VALUE = result["max"].as<int>();
+        STREAM_MIN_VALUE = result["min"].as<int>();
+        final_vector = result["final"].as<bool>();
         zipf_s = result["zipf-s"].as<double>();
 
         // --- Validate Required Arguments and Values ---
@@ -83,6 +93,8 @@ int main(int argc, char* argv[]) {
             throw cxxopts::exceptions::exception("Error: Invalid mode '" + mode + "'. Choose 'stream' or 'zipfian'.");
         } else if (mode == "zipfian" && zipf_s <= 0.0) {
             throw cxxopts::exceptions::exception("Error: Zipfian exponent 's' (--zipf-s) must be positive for 'zipfian' mode.");
+        } else if (mode == "stream" && STREAM_MIN_VALUE >= STREAM_MAX_VALUE) {
+            throw cxxopts::exceptions::exception("Error: Invalid range for stream updates. Min value must be less than max value.");
         }
     } catch (const cxxopts::exceptions::exception& e) {
         std::cerr << "Error parsing options: " << e.what() << std::endl;
@@ -100,6 +112,7 @@ int main(int argc, char* argv[]) {
     if (mode == "stream") {
         std::cout << "  Number of Stream Updates: " << num_updates << std::endl;
         std::cout << "  Stream Value Range: [" << STREAM_MIN_VALUE << ", " << STREAM_MAX_VALUE << "]" << std::endl;
+        std::cout << "  Final Vector Flag: " << (final_vector ? "true" : "false") << std::endl;
     } else {  // zipfian mode
         std::cout << "  Total Frequency: " << num_updates << std::endl;
         std::cout << "  Zipfian Exponent (s): " << zipf_s << std::endl;
@@ -122,9 +135,15 @@ int main(int argc, char* argv[]) {
         std::uniform_int_distribution<int> value_dist(STREAM_MIN_VALUE, STREAM_MAX_VALUE);
 
         outfile << "# " << n << " " << num_updates << "\n";
+        std::vector<int64_t> frequencies(n, 0);
+ 
         for (size_t k = 0; k < num_updates; ++k) {
             size_t index = index_dist(rng);
             int value = value_dist(rng);
+            frequencies[index] += value;
+
+            if (final_vector) { continue; }  // Skip writing (index, value) pairs if final vector is requested
+
             outfile << index << " " << value << "\n";
             if (!outfile) {  // Check for write errors
                 std::cerr << "\nError: Failed to write to output file '" << output_filename << "'. Disk full?" << std::endl;
@@ -132,6 +151,18 @@ int main(int argc, char* argv[]) {
                 return 1;
             }
         }
+
+        if (final_vector) {
+            for (size_t i = 0; i < n; ++i) {
+                outfile << i << " " << frequencies[i] << "\n";
+                if (!outfile) {  // Check for write errors
+                    std::cerr << "\nError: Failed to write final frequency vector to output file '" << output_filename << "'. Disk full?" << std::endl;
+                    outfile.close();
+                    return 1;
+                }
+            }
+        }
+
         std::cout << "Successfully generated " << num_updates << " stream updates." << std::endl;
 
     } else {  // mode == "zipfian"

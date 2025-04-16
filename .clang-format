@@ -15,4 +15,5 @@ PenaltyBreakFirstLessLess: '200'
 PenaltyReturnTypeOnItsOwnLine: '200'
 ReflowComments: 'true'
 PackConstructorInitializers: 'NextLineOnly'
+AllowShortIfStatementsOnASingleLine: 'true'
 ...
