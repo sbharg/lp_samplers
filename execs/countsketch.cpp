@@ -15,13 +15,15 @@ int main(int argc, char* argv[]) {
         freq[i] = dist(rng);
     }
 
-    size_t w = 25;
+    size_t w = 25;                                            // width of the sketch
     size_t d = static_cast<size_t>(std::ceil(std::log2(n)));  // d = log2(n) + 1;
-    CountSketch cs(w, d, true, 42);                           // d rows, w columns
+    CountSketch cs(w, d, 42, false);                          // d rows, w columns
     // Insert/update keys
     for (size_t i = 0; i < n; ++i) {
         cs.update(i, freq[i]);
     }
+
+    std::cout << cs << std::endl;
 
     // Query frequencies
     double error = 0;

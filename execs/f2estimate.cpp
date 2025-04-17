@@ -4,7 +4,7 @@
 #include "FpEstimator.h"
 
 int main() {
-    F2Estimator sketch(0.1, 0.01, false, 42);
+    F2Estimator sketch(0.1, 0.01, 42, false);
 
     // Insert/update keys
     sketch.update(42, 10);

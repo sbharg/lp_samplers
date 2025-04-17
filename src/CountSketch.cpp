@@ -5,21 +5,15 @@
 #include <iostream>
 #include <random>
 
+#include "KWiseHash.h"
 #include "MurmurHash3.h"
 
 CountSketch::CountSketch(size_t w, size_t d, uint64_t seed, bool murmur)
     : w_(w), d_(d), seed_(seed), use_murmur_(murmur), table_(d, std::vector<int64_t>(w, 0)) {
     if (!use_murmur_) {
-        index_params.reserve(d_);
-        sign_params.reserve(d_);
-
-        std::mt19937_64 rng(seed);
-        std::uniform_int_distribution<uint64_t> dist(1, 2147483647);
-
-        // Generate random parameters for hash functions
         for (size_t i = 0; i < d_; ++i) {
-            index_params.emplace_back(dist(rng), dist(rng));
-            sign_params.emplace_back(dist(rng), dist(rng));
+            index_hashes.emplace_back(KWiseHash(2, seed_ + i));
+            sign_hashes.emplace_back(KWiseHash(2, seed_ + 2 * i));
         }
     }
 }
@@ -56,8 +50,7 @@ size_t CountSketch::idx_hash(const size_t i, const uint64_t key) const {
     if (use_murmur_) {
         res = murmur_hash3_64(key, seed_ + i);
     } else {
-        auto [a, b] = index_params[i];
-        res = mod_prime(a * key + b);
+        res = index_hashes[i].hash(key);
     }
     return res % w_;
 }
@@ -82,8 +75,7 @@ int CountSketch::sign_hash(const size_t i, const uint64_t key) const {
     if (use_murmur_) {
         res = murmur_hash3_64(key, seed_ + 2 * i);
     } else {
-        auto [a, b] = sign_params[i];
-        res = mod_prime(a * key + b);
+        res = sign_hashes[i].hash(key);
     }
     return (res & 1) ? -1 : 1;
 }
@@ -122,7 +114,6 @@ int64_t CountSketch::estimate(const uint64_t key) const {
     }
 
     // Return median estimate
-    std::nth_element(
-        estimates.begin(), estimates.begin() + estimates.size() / 2, estimates.end());
+    std::nth_element(estimates.begin(), estimates.begin() + estimates.size() / 2, estimates.end());
     return estimates[estimates.size() / 2];
 }

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 
+#include "KWiseHash.h"
+
 class F2Estimator {
   public:
     /**
@@ -34,20 +36,8 @@ class F2Estimator {
 
     std::vector<int64_t> table_;  // Sketch matrix of size d_ x w_
 
-    struct sign_hash_params {
-        uint64_t a_1;
-        uint64_t a_2;
-        uint64_t a_3;
-        uint64_t a_4;
-    };
-
-    const uint64_t PRIME_ = (1ULL << 61) - 1;    // 2^61 - 1, large Mersenne prime
-    std::pair<uint64_t, uint64_t> index_params;  // Parameters for MS index hash functions
-    sign_hash_params sign_params;                // Parameters for MS sign hash functions
-    uint64_t mod_prime(uint64_t x) const {
-        uint64_t res = (x >> 61) + (x & PRIME_);
-        return (res >= PRIME_) ? res - PRIME_ : res;
-    }
+    KWiseHash index_hash_;
+    KWiseHash sign_hash_;
 
     size_t idx_hash(const uint64_t key) const;
     int sign_hash(const uint64_t key) const;

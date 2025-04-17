@@ -6,6 +6,7 @@
 #include <iostream>
 #include <random>
 
+#include "KWiseHash.h"
 #include "MurmurHash3.h"
 
 F2Estimator::F2Estimator(double eps, double delta, uint64_t seed, bool murmur)
@@ -14,16 +15,9 @@ F2Estimator::F2Estimator(double eps, double delta, uint64_t seed, bool murmur)
       delta_(delta),
       seed_(seed),
       use_murmur_(murmur),
-      table_(w_) {
-    if (!use_murmur_) {
-        std::mt19937_64 rng(seed);
-        std::uniform_int_distribution<uint64_t> dist(1, 2147483647);
-
-        // Generate random parameters for hash functions
-        index_params = std::make_pair(dist(rng), dist(rng));
-        sign_params = {dist(rng), dist(rng), dist(rng), dist(rng)};
-    }
-}
+      table_(w_),
+      index_hash_(2, seed_),
+      sign_hash_(4, seed_ + 20) {}
 
 std::ostream& operator<<(std::ostream& os, const F2Estimator& sketch) {
     if (sketch.table_.size() <= 25) {
@@ -49,8 +43,7 @@ size_t F2Estimator::idx_hash(const uint64_t key) const {
     if (use_murmur_) {
         res = murmur_hash3_64(key, seed_);
     } else {
-        auto [a, b] = index_params;
-        res = mod_prime(a * key + b);
+        res = index_hash_.hash(key);
     }
     return res % w_;
 }
@@ -69,11 +62,7 @@ int F2Estimator::sign_hash(const uint64_t key) const {
     if (use_murmur_) {
         res = murmur_hash3_64(key, seed_ + 20);
     } else {
-        res = mod_prime(sign_params.a_1);
-        res += mod_prime(key * sign_params.a_2);
-        res += mod_prime(key * key * sign_params.a_3);
-        res += mod_prime(key * key * key * sign_params.a_4);
-        res = mod_prime(res);
+        res = sign_hash_.hash(key);
     }
     return (res & 1) ? -1 : 1;
 }
