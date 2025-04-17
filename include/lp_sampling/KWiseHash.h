@@ -47,9 +47,8 @@ class KWiseHash {
 
     uint64_t hash(uint64_t x) const {
         uint64_t res = 0;
-        // Horner’s method: res = ( … ((a[k-1] * x + a[k-2]) * x + … ) * x + a[0] ) mod MP61
+        // Horner’s method
         for (int i = k_ - 1; i >= 0; --i) {
-            // res = (res * x) mod MP61
             res = mul61(res, x);
             res += a_[i];
             if (res >= MP61) res -= MP61;
@@ -58,7 +57,7 @@ class KWiseHash {
     }
 
   private:
-    // Branchless reduction of a 128-bit value (hi:lo) modulo 2^61-1
+    // Branchless reduction of a 128-bit value (hi:lo) modulo MP61
     uint64_t mod61(uint64_t hi, uint64_t lo) const {
         uint64_t lo61 = lo & MP61;
         uint64_t hi_part = (lo >> 61) + (hi << 3) + (hi >> 58);
@@ -67,7 +66,7 @@ class KWiseHash {
         return sum >= MP61 ? sum - MP61 : sum;
     }
 
-    // Fast multiplication mod P61
+    // Fast multiplication mod MP61
     uint64_t mul61(uint64_t a, uint64_t b) const {
         uint128_t prod = static_cast<uint128_t>(a) * b;
         uint64_t lo = static_cast<uint64_t>(prod);
