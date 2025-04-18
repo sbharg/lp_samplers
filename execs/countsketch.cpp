@@ -18,6 +18,8 @@ int main(int argc, char* argv[]) {
     size_t w = 25;                                            // width of the sketch
     size_t d = static_cast<size_t>(std::ceil(std::log2(n)));  // d = log2(n) + 1;
     CountSketch cs(w, d, 42, false);                          // d rows, w columns
+
+    std::cout << "Constructed cs" << std::endl;
     // Insert/update keys
     for (size_t i = 0; i < n; ++i) {
         cs.update(i, freq[i]);
@@ -35,7 +37,8 @@ int main(int argc, char* argv[]) {
     if (n <= 30) {
         // Print a table of the actual and esimated frequencies
         for (size_t i = 0; i < n; ++i) {
-            std::cout << "Actual: " << freq[i] << " Estimated: " << cs.estimate(i) << std::endl;
+            std::cout << "Actual: " << freq[i] << " Estimated: " << cs.estimate(i)
+                      << std::endl;
         }
     } else {
         int x = 20;

@@ -9,7 +9,11 @@
 #include "MurmurHash3.h"
 
 CountSketch::CountSketch(size_t w, size_t d, uint64_t seed, bool murmur)
-    : w_(w), d_(d), seed_(seed), use_murmur_(murmur), table_(d, std::vector<int64_t>(w, 0)) {
+    : w_(w),
+      d_(d),
+      seed_(seed),
+      use_murmur_(murmur),
+      table_(d, std::vector<int64_t>(w, 0)) {
     if (!use_murmur_) {
         for (size_t i = 0; i < d_; ++i) {
             index_hashes.emplace_back(KWiseHash(2, seed_ + i));
@@ -114,6 +118,7 @@ int64_t CountSketch::estimate(const uint64_t key) const {
     }
 
     // Return median estimate
-    std::nth_element(estimates.begin(), estimates.begin() + estimates.size() / 2, estimates.end());
+    std::nth_element(
+        estimates.begin(), estimates.begin() + estimates.size() / 2, estimates.end());
     return estimates[estimates.size() / 2];
 }

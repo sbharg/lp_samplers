@@ -18,7 +18,10 @@ class F2Estimator {
      * \param seed The seed for the random number generator. Defaults to 42.
      * \param murmur Whether to use MurmurHash3 for hashing. Defaults to false.
      */
-    F2Estimator(double eps = 0.1, double delta = 0.01, uint64_t seed = 42, bool murmur = false);
+    F2Estimator(double eps = 0.1,
+                double delta = 0.01,
+                uint64_t seed = 42,
+                bool murmur = false);
 
     // Modifies the CountSketch to handle stream updates of the form (key, delta).
     void update(const uint64_t key, const int64_t delta);
