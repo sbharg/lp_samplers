@@ -74,7 +74,7 @@ int F2Estimator::sign_hash(const uint64_t key) const {
  * \param key The key whose frequency is being updated.
  * \param delta The change in frequency of the key.
  */
-void F2Estimator::update(const uint64_t key, const int64_t delta) {
+void F2Estimator::update(const uint64_t key, const double delta) {
     size_t idx = idx_hash(key);
     int sign = sign_hash(key);
     table_[idx] += sign * delta;
@@ -145,7 +145,7 @@ F1Estimator::F1Estimator(double eps, double delta, uint64_t seed)
  * \param key The key whose frequency is being updated.
  * \param delta The change in frequency of the key.
  */
-void F1Estimator::update(const uint64_t key, const int64_t delta) {
+void F1Estimator::update(const uint64_t key, const double delta) {
     for (size_t i = 0; i < w_; ++i) {
         double cauchy_rv = dists_[i](key);
         table_[i] += delta * cauchy_rv;
@@ -160,12 +160,12 @@ void F1Estimator::update(const uint64_t key, const int64_t delta) {
  * \return The l1 norm estimate.
  */
 double F1Estimator::estimate_norm() const {
-    std::vector<int64_t> estimates;
+    std::vector<double> estimates;
     estimates.reserve(w_);
 
     std::transform(
         table_.begin(), table_.end(), std::back_inserter(estimates), [](const auto& val) {
-            return std::abs(val);
+            return std::fabs(val);
         });
 
     // Return median estimate

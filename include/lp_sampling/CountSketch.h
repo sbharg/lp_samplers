@@ -18,9 +18,12 @@ class CountSketch {
      * \param murmur Whether to use MurmurHash3 for hashing. Defaults to false.
      */
     CountSketch(size_t w, size_t d = 5, uint64_t seed = 42, bool murmur = false);
+    ~CountSketch() = default;
+    CountSketch(const CountSketch& other) = default;
+    CountSketch& operator=(const CountSketch& other) = default;
 
     // Modifies the CountSketch to handle stream updates of the form (key, delta).
-    void update(const uint64_t key, const int64_t delta);
+    void update(const uint64_t key, const double delta);
     // Computes an estimate of the frequency of a given key.
     int64_t estimate(const uint64_t key) const;
 
@@ -32,7 +35,7 @@ class CountSketch {
     const size_t d_;  // number of hash/sign rows
     const bool use_murmur_;
 
-    std::vector<std::vector<int64_t>> table_;  // Sketch matrix of size d_ x w_
+    std::vector<std::vector<double>> table_;  // Sketch matrix of size d_ x w_
 
     std::vector<KWiseHash> index_hashes;
     std::vector<KWiseHash> sign_hashes;

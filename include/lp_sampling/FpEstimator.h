@@ -10,7 +10,7 @@
 class FpEstimator {
   public:
     virtual ~FpEstimator() = default;
-    virtual void update(const uint64_t key, const int64_t delta) = 0;
+    virtual void update(const uint64_t key, const double delta) = 0;
     virtual double estimate_norm() const = 0;
 };
 
@@ -31,7 +31,7 @@ class F2Estimator : public FpEstimator {
                 bool murmur = false);
 
     // Modifies the CountSketch to handle stream updates of the form (key, delta).
-    void update(const uint64_t key, const int64_t delta) override;
+    void update(const uint64_t key, const double delta) override;
     // Computes an estimate of the frequency of a given key.
     double estimate_norm() const override;
 
@@ -44,7 +44,7 @@ class F2Estimator : public FpEstimator {
     const uint64_t seed_;
     const bool use_murmur_;
 
-    std::vector<int64_t> table_;  // Sketch vector of size w_
+    std::vector<double> table_;  // Sketch vector of size w_
 
     KWiseHash index_hash_;
     KWiseHash sign_hash_;
@@ -77,7 +77,7 @@ class F1Estimator : public FpEstimator {
     F1Estimator& operator=(const F1Estimator& other) = default;
 
     // Modifies the table to handle stream updates of the form (key, delta).
-    void update(const uint64_t key, const int64_t delta) override;
+    void update(const uint64_t key, const double delta) override;
     // Computes an estimate of the frequency of a given key.
     double estimate_norm() const override;
 
@@ -92,7 +92,7 @@ class F1Estimator : public FpEstimator {
     const uint64_t seed_;
 
     std::vector<cauchy_distribution> dists_;
-    std::vector<int64_t> table_;  // Sketch vector of size
+    std::vector<double> table_;  // Sketch vector of size
 };
 
 #endif  // FP_ESTIMATOR_H_

@@ -13,7 +13,7 @@ CountSketch::CountSketch(size_t w, size_t d, uint64_t seed, bool murmur)
       d_(d),
       seed_(seed),
       use_murmur_(murmur),
-      table_(d, std::vector<int64_t>(w, 0)) {
+      table_(d, std::vector<double>(w, 0)) {
     if (!use_murmur_) {
         for (size_t i = 0; i < d_; ++i) {
             index_hashes.emplace_back(KWiseHash(2, seed_ + i));
@@ -91,7 +91,7 @@ int CountSketch::sign_hash(const size_t i, const uint64_t key) const {
  * \param key The key whose frequency is being updated.
  * \param delta The change in frequency of the key.
  */
-void CountSketch::update(const uint64_t key, const int64_t delta) {
+void CountSketch::update(const uint64_t key, const double delta) {
     for (size_t i = 0; i < d_; ++i) {
         size_t idx = idx_hash(i, key);
         int sign = sign_hash(i, key);
@@ -109,7 +109,7 @@ void CountSketch::update(const uint64_t key, const int64_t delta) {
  * \return The median estimate of the frequency of the key.
  */
 int64_t CountSketch::estimate(const uint64_t key) const {
-    std::vector<int64_t> estimates(d_);
+    std::vector<double> estimates(d_);
 
     for (size_t i = 0; i < d_; ++i) {
         size_t idx = idx_hash(i, key);
