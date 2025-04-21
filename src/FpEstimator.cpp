@@ -140,7 +140,7 @@ F1Estimator::F1Estimator(double eps, double delta, uint64_t seed)
 
 /**
  * Modifies the table to handle stream updates of the form (key, delta).
- * Updates table[i] += hash_i(key) * delta for each i \in [w_].
+ * Updates table[i] += dists_[i](key) * delta for each i \in [w_].
  *
  * \param key The key whose frequency is being updated.
  * \param delta The change in frequency of the key.
@@ -153,8 +153,8 @@ void F1Estimator::update(const uint64_t key, const int64_t delta) {
 }
 
 /**
- * Computes an estimate of the square of the l2 norm of the frequency vector.
- * For each i \in [d], the estimate of freq(key) is sign_i(key) * table[i][h_i(key)].
+ * Computes an estimate of the l1 norm of the frequency vector.
+ * For each i \in [w_], an estimate is given by abs(table_[i]).
  * To boost accuracy, the median of these estimates is returned.
  *
  * \return The l1 norm estimate.

@@ -7,7 +7,14 @@
 
 #include "KWiseHash.h"
 
-class F2Estimator {
+class FpEstimator {
+  public:
+    virtual ~FpEstimator() = default;
+    virtual void update(const uint64_t key, const int64_t delta) = 0;
+    virtual double estimate_norm() const = 0;
+};
+
+class F2Estimator : public FpEstimator {
   public:
     /**
      * Constructs a CountSketch data structure with a single row of width 6 * (eps^2 *
@@ -24,9 +31,9 @@ class F2Estimator {
                 bool murmur = false);
 
     // Modifies the CountSketch to handle stream updates of the form (key, delta).
-    void update(const uint64_t key, const int64_t delta);
+    void update(const uint64_t key, const int64_t delta) override;
     // Computes an estimate of the frequency of a given key.
-    double estimate_norm() const;
+    double estimate_norm() const override;
 
     friend std::ostream& operator<<(std::ostream& os, const F2Estimator& sketch);
 
@@ -61,7 +68,7 @@ class cauchy_distribution {
     KWiseHash hash_;  // k-wise hash function for thetas
 };
 
-class F1Estimator {
+class F1Estimator : public FpEstimator {
   public:
     F1Estimator(double eps = 0.1, double delta = 0.01, uint64_t seed = 42);
 
@@ -70,9 +77,9 @@ class F1Estimator {
     F1Estimator& operator=(const F1Estimator& other) = default;
 
     // Modifies the table to handle stream updates of the form (key, delta).
-    void update(const uint64_t key, const int64_t delta);
+    void update(const uint64_t key, const int64_t delta) override;
     // Computes an estimate of the frequency of a given key.
-    double estimate_norm() const;
+    double estimate_norm() const override;
 
     size_t get_w() const { return w_; }
     size_t get_eps() const { return eps_; }

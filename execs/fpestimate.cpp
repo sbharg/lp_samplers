@@ -21,10 +21,11 @@ int main() {
     for (size_t i = 0; i < n; ++i) {
         freq[i] = dist(rng);
     }
-    uint64_t l1_norm = 0;
+
+    double l1_norm = 0;
     double l2_norm = 0;
     for (size_t i = 0; i < n; ++i) {
-        l1_norm += std::abs(freq[i]);
+        l1_norm += static_cast<double>(std::abs(freq[i]));
         l2_norm += static_cast<double>(freq[i] * freq[i]);
     }
     l2_norm = sqrt(l2_norm);
