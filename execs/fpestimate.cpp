@@ -8,7 +8,7 @@ int main() {
     uint64_t seed = rd();
     std::cout << "Random seed: " << seed << std::endl;
 
-    F2Estimator sketch_f2(0.1, 0.01, seed, false);
+    F2Estimator sketch_f2(0.125, 0.01, seed, false);
     F1Estimator sketch_f1(0.125, 0.01, seed);
     std::cout << "Constructed Sketches" << std::endl;
     std::cout << "F1 Sketch size: " << sketch_f1.get_w() << "\n\n";
