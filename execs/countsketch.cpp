@@ -17,7 +17,9 @@ int main(int argc, char* argv[]) {
 
     size_t w = 25;                                            // width of the sketch
     size_t d = static_cast<size_t>(std::ceil(std::log2(n)));  // d = log2(n) + 1;
-    CountSketch cs(w, d, 42, false);                          // d rows, w columns
+
+    std::random_device rd;
+    CountSketch cs(w, d, rd(), false);  // d rows, w columns
 
     std::cout << "Constructed cs" << std::endl;
     // Insert/update keys
