@@ -35,6 +35,8 @@ class F2Estimator : public FpEstimator {
     // Computes an estimate of the frequency of a given key.
     double estimate_norm() const override;
 
+    void subtract(const F2Estimator& other);
+
     friend std::ostream& operator<<(std::ostream& os, const F2Estimator& sketch);
 
   private:

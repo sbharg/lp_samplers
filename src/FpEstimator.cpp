@@ -29,6 +29,15 @@ std::ostream& operator<<(std::ostream& os, const F2Estimator& sketch) {
     return os;
 }
 
+void F2Estimator::subtract(const F2Estimator& other) {
+    if (w_ != other.w_) {
+        throw std::invalid_argument("Sketches have different widths");
+    }
+    for (size_t i = 0; i < w_; ++i) {
+        table_[i] -= other.table_[i];
+    }
+}
+
 /**
  * A hash function that returns the bucket that a key is hashed into.
  * If use_murmur_ is true, uses MurmurHash3. Otherwise, uses a simple multiply-shift hash

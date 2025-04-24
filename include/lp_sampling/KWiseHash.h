@@ -13,7 +13,7 @@ class KWiseHash {
     const uint64_t MP61 = (1ULL << 61) - 1;  // Large Mersenne prime
 
   public:
-    KWiseHash(int k, uint64_t seed = std::random_device{}());
+    KWiseHash(uint64_t k, uint64_t seed = std::random_device{}());
 
     ~KWiseHash() = default;
 

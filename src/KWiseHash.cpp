@@ -5,7 +5,7 @@
 #include <random>
 #include <vector>
 
-KWiseHash::KWiseHash(int k, uint64_t seed)
+KWiseHash::KWiseHash(uint64_t k, uint64_t seed)
     : k_(k), a_(k) {
     std::mt19937_64 rng(seed);
     std::uniform_int_distribution<uint64_t> dist(0, MP61 - 1);
