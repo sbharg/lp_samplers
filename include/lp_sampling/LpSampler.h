@@ -24,13 +24,14 @@ class LpSampler {
     double delta_;
     uint64_t n_;  // number of possible keys
     uint64_t seed_;
-
-    uint64_t m_;  // width of CountSketch
+    uint64_t m_;                    // width of CountSketch
+    mutable bool sampled_ = false;  // whether the sketch has been sampled
 
     KWiseHash scalars_;  // Hash function for sampling uni variables
     std::unique_ptr<CountSketch> cs_;
     std::unique_ptr<FpEstimator> fp_;      // Fp sketch for Lp norm of x
     std::unique_ptr<F2Estimator> f2_err_;  // F2 sketch for L2 norm of z - z_hat
+    const double norm_eps_ = 0.125;        // error for Fp sketches
 };
 
 #endif  // LP_SAMPLER_H_

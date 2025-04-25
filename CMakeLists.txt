@@ -22,6 +22,7 @@ add_library(lpsampling STATIC
   src/MurmurHash3.cpp
   src/FpEstimator.cpp
   src/KWiseHash.cpp
+  src/LpSampler.cpp
 )
 target_include_directories(lpsampling
   PUBLIC ${PROJECT_SOURCE_DIR}/include/lp_sampling
@@ -36,6 +37,11 @@ add_executable(fpestimate_test
   execs/fpestimate.cpp
 )
 target_link_libraries(fpestimate_test PRIVATE lpsampling)
+
+add_executable(lpsampler_test
+  execs/lpsampler.cpp
+)
+target_link_libraries(lpsampler_test PRIVATE lpsampling)
 
 add_library(cxxopts INTERFACE)
 add_subdirectory(include/cxxopts)

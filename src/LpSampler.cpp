@@ -28,17 +28,17 @@ LpSampler::LpSampler(uint16_t p, double eps, double delta, uint64_t n, uint64_t 
 
     if (p == 1) {
         m_ = static_cast<uint64_t>(8 * std::ceil(-std::log(eps_)));
-        fp_ = std::make_unique<F1Estimator>(eps, delta / 2, seed);
+        fp_ = std::make_unique<F1Estimator>(norm_eps_, delta / 2, seed);
     } else {
         m_ = static_cast<uint64_t>(8 * 1 / eps * std::log(n_));
-        fp_ = std::make_unique<F2Estimator>(eps, delta / 2, seed);
+        fp_ = std::make_unique<F2Estimator>(norm_eps_, delta / 2, seed);
     }
 
     size_t depth = 4 * static_cast<size_t>(std::ceil(std::log(n_)));
     depth = (depth & 1) ? depth : depth + 1;  // make sure depth is odd
     cs_ = std::make_unique<CountSketch>(6 * m_, depth, seed, false);
 
-    f2_err_ = std::make_unique<F2Estimator>(eps_, delta_ / 2, seed_);
+    f2_err_ = std::make_unique<F2Estimator>(norm_eps_, delta_ / 2, seed_);
 }
 
 void LpSampler::update(const uint64_t i, const double delta) {
@@ -51,6 +51,11 @@ void LpSampler::update(const uint64_t i, const double delta) {
 }
 
 std::optional<uint64_t> LpSampler::sample() const {
+    if (sampled_) {
+        throw std::runtime_error("Already sampled");
+    }
+    sampled_ = true;
+
     double r = 1.5 * fp_->estimate_norm();
 
     auto cmp = [](const std::pair<uint64_t, double>& a,
@@ -78,7 +83,7 @@ std::optional<uint64_t> LpSampler::sample() const {
         }
     }
 
-    F2Estimator m_sparse(eps_, delta_ / 2, seed_);
+    F2Estimator m_sparse(norm_eps_, delta_ / 2, seed_);
     while (!pq.empty()) {
         auto pair = pq.top();
         pq.pop();
