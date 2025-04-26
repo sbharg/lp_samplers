@@ -2,6 +2,7 @@ build/
 .vscode/
 .DS_Store
 generated_datasets/
+logs/
 
 scratch.txt
 scratch/

@@ -1,8 +1,10 @@
 #include <LpSampler.h>
 
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <random>
 #include <stop_token>
@@ -20,13 +22,19 @@ int main() {
     std::mt19937_64 rng(rd());
     uint64_t seed = rng();
 
-    size_t num_samplers = static_cast<size_t>(10 * (1.0 / eps) * -std::log(delta));
-    size_t num_threads = std::min<size_t>(std::thread::hardware_concurrency(), num_samplers);
-    if (num_threads == 0) num_threads = 4; // fallback
+    size_t num_samplers = static_cast<size_t>(4 * (1.0 / eps) * -std::log(delta));
+    size_t num_threads =
+        std::min<size_t>(std::thread::hardware_concurrency(), num_samplers);
+    if (num_threads == 0) num_threads = 4;  // fallback
     size_t samplers_per_thread = (num_samplers + num_threads - 1) / num_threads;
 
+    // std::cout << "Number of samplers: " << num_samplers << std::endl;
+    // std::cout << "Number of threads: " << num_threads << std::endl;
+    // std::cout << "Samplers per thread: " << samplers_per_thread << std::endl;
+
     std::atomic<bool> found_sample(false);
-    std::atomic<size_t> sampled_index(n); // n is invalid
+    std::atomic<size_t> sampled_index(n);  // n is invalid
+    std::atomic<size_t> threads_finished(0);
     std::vector<std::jthread> threads;
 
     auto sampler_task = [&](std::stop_token stoken, size_t thread_idx) {
@@ -43,23 +51,28 @@ int main() {
                 break;
             }
         }
+        threads_finished.fetch_add(1, std::memory_order_relaxed);
     };
 
     for (size_t t = 0; t < num_threads; ++t) {
         threads.emplace_back(sampler_task, t);
     }
 
-    while (!found_sample) {
+    // Wait for either a sample or all threads to finish
+    while (!found_sample &&
+           threads_finished.load(std::memory_order_relaxed) < num_threads) {
         std::this_thread::yield();
     }
+
     for (auto& t : threads) {
         t.request_stop();
     }
+    threads.clear();
 
-    if (sampled_index < n) {
-        std::cout << "Sampled index: " << sampled_index << std::endl;
-    } else {
-        std::cout << "Failed to sample" << std::endl;
+    std::ofstream log_file("../logs/lpsampler.txt", std::ios::app);
+    if (log_file.is_open()) {
+        std::string result = (sampled_index < n) ? std::to_string(sampled_index) : "FAIL";
+        log_file << result << "\n";
     }
 
     return 0;
