@@ -1,6 +1,6 @@
-# $\ell_p$ Samplers
+# $L_p$ Samplers
 
-A C++ implementation of low-memory probabilistic data structures for $\ell_p$ sampling for $p \in \lbrace 1, 2 \rbrace$ in data streams.
+A C++ implementation of low-memory probabilistic data structures for $L_p$ sampling for $p \in \lbrace 1, 2 \rbrace$ in data streams.
 
 ## Building
 This project uses CMake for building. To build the library and test executables:
